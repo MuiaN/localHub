@@ -1,0 +1,114 @@
+-- Create database if not exists
+CREATE DATABASE IF NOT EXISTS localhub;
+USE localhub;
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Businesses table
+CREATE TABLE IF NOT EXISTS businesses (
+  id VARCHAR(36) PRIMARY KEY,
+  owner_id VARCHAR(36) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  description TEXT,
+  address VARCHAR(255),
+  city VARCHAR(100),
+  lat DECIMAL(10, 8),
+  lng DECIMAL(11, 8),
+  phone VARCHAR(20),
+  email VARCHAR(255),
+  website VARCHAR(255),
+  mpesa_number VARCHAR(20),
+  rating DECIMAL(2, 1) DEFAULT 0,
+  review_count INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Business operating hours
+CREATE TABLE IF NOT EXISTS business_hours (
+  id VARCHAR(36) PRIMARY KEY,
+  business_id VARCHAR(36) NOT NULL,
+  day_of_week VARCHAR(10) NOT NULL,
+  is_open BOOLEAN DEFAULT true,
+  open_time TIME,
+  close_time TIME,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+);
+
+-- Business images
+CREATE TABLE IF NOT EXISTS business_images (
+  id VARCHAR(36) PRIMARY KEY,
+  business_id VARCHAR(36) NOT NULL,
+  type ENUM('logo', 'banner', 'gallery') NOT NULL,
+  url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+);
+
+-- Services
+CREATE TABLE IF NOT EXISTS services (
+  id VARCHAR(36) PRIMARY KEY,
+  business_id VARCHAR(36) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  duration INT NOT NULL, -- in minutes
+  price DECIMAL(10, 2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+);
+
+-- Customers
+CREATE TABLE IF NOT EXISTS customers (
+  id VARCHAR(36) PRIMARY KEY,
+  business_id VARCHAR(36) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  phone VARCHAR(20),
+  email VARCHAR(255),
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+);
+
+-- Bookings
+CREATE TABLE IF NOT EXISTS bookings (
+  id VARCHAR(36) PRIMARY KEY,
+  business_id VARCHAR(36) NOT NULL,
+  customer_id VARCHAR(36) NOT NULL,
+  service_id VARCHAR(36) NOT NULL,
+  start_time DATETIME NOT NULL,
+  end_time DATETIME NOT NULL,
+  status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending',
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+);
+
+-- Reviews
+CREATE TABLE IF NOT EXISTS reviews (
+  id VARCHAR(36) PRIMARY KEY,
+  business_id VARCHAR(36) NOT NULL,
+  customer_id VARCHAR(36) NOT NULL,
+  rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+); 

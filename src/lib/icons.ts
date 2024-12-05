@@ -27,7 +27,10 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  BarChart
+  BarChart,
+  AlertTriangle,
+  Loader,
+  Info,
 } from 'lucide-react';
 
 // Export the icons we're using
@@ -59,5 +62,8 @@ export const Icons = {
   Shield,
   ChevronLeft,
   ChevronRight,
-  BarChart
+  BarChart,
+  AlertTriangle,
+  Loader,
+  Info,
 }; 

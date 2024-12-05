@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Icons } from '../../lib/icons';
 import type { Service } from '../../types';
-import { cn } from '../../lib/utils';
+import { cn, inputStyles } from '../../lib/utils';
 
 interface ServiceModalProps {
   isOpen: boolean;
@@ -76,13 +76,13 @@ export function ServiceModal({ isOpen, onClose, onSubmit, service }: ServiceModa
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
+            <div className={inputStyles.error}>
               {error}
             </div>
           )}
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="name" className={inputStyles.label}>
               Service Name *
             </label>
             <input
@@ -90,20 +90,20 @@ export function ServiceModal({ isOpen, onClose, onSubmit, service }: ServiceModa
               id="name"
               value={formData.name}
               onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className={inputStyles.base}
               required
             />
           </div>
 
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="category" className={inputStyles.label}>
               Category *
             </label>
             <select
               id="category"
               value={formData.category}
               onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className={inputStyles.select}
               required
             >
               <option value="">Select a category</option>
@@ -117,7 +117,7 @@ export function ServiceModal({ isOpen, onClose, onSubmit, service }: ServiceModa
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="description" className={inputStyles.label}>
               Description *
             </label>
             <textarea
@@ -125,14 +125,14 @@ export function ServiceModal({ isOpen, onClose, onSubmit, service }: ServiceModa
               value={formData.description}
               onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className={inputStyles.textarea}
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="price" className={inputStyles.label}>
                 Price (KES) *
               </label>
               <input
@@ -142,20 +142,20 @@ export function ServiceModal({ isOpen, onClose, onSubmit, service }: ServiceModa
                 onChange={e => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
                 min="0"
                 step="50"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={inputStyles.base}
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="duration" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="duration" className={inputStyles.label}>
                 Duration (minutes)
               </label>
               <select
                 id="duration"
                 value={formData.duration}
                 onChange={e => setFormData(prev => ({ ...prev, duration: Number(e.target.value) }))}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={inputStyles.select}
               >
                 <option value="15">15 minutes</option>
                 <option value="30">30 minutes</option>
@@ -168,21 +168,23 @@ export function ServiceModal({ isOpen, onClose, onSubmit, service }: ServiceModa
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className={inputStyles.label}>
               Service Images
             </label>
-            <div className="mt-1 flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <input
                 type="url"
                 value={imageUrl}
                 onChange={e => setImageUrl(e.target.value)}
                 placeholder="Enter image URL"
-                className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={inputStyles.base}
               />
               <button
                 type="button"
                 onClick={handleAddImage}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                className="h-12 px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg
+                hover:bg-blue-700 transition-colors duration-200
+                focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
               >
                 Add
               </button>
@@ -193,7 +195,7 @@ export function ServiceModal({ isOpen, onClose, onSubmit, service }: ServiceModa
                   <img
                     src={url}
                     alt={`Service ${index + 1}`}
-                    className="h-24 w-full object-cover rounded-md"
+                    className="h-24 w-full object-cover rounded-lg"
                   />
                   <button
                     type="button"
@@ -211,13 +213,16 @@ export function ServiceModal({ isOpen, onClose, onSubmit, service }: ServiceModa
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="px-6 py-3 border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-700 
+              hover:bg-gray-50 transition-colors duration-200"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              className="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white 
+              bg-blue-600 hover:bg-blue-700 transition-colors duration-200
+              focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
             >
               {service ? 'Save Changes' : 'Add Service'}
             </button>

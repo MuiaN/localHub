@@ -1,53 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
+import { Icons } from '../../lib/icons';
 import type { Booking } from '../../types';
+import { cn, inputStyles } from '../../lib/utils';
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  booking: Booking | null;
+  booking: Booking;
   onSubmit: (booking: Booking) => void;
 }
 
 export function BookingModal({ isOpen, onClose, booking, onSubmit }: BookingModalProps) {
-  const [formData, setFormData] = useState<Partial<Booking>>({});
+  const [formData, setFormData] = useState(booking);
 
-  useEffect(() => {
-    if (booking) {
-      setFormData(booking);
-    } else {
-      setFormData({});
-    }
-  }, [booking]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (booking && formData) {
-      onSubmit({ ...booking, ...formData });
-    }
+    onSubmit(formData);
+    onClose();
   };
 
-  if (!isOpen || !booking) return null;
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-md w-full">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Update Booking
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <Icons.X className="h-6 w-6" />
+          </button>
         </div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <div className="absolute top-0 right-0 pt-4 pr-4">
-            <button
-              onClick={onClose}
-              className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-gray-900">Booking Details</h3>
               <p className="mt-1 text-sm text-gray-500">
@@ -56,11 +47,14 @@ export function BookingModal({ isOpen, onClose, booking, onSubmit }: BookingModa
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Status</label>
+              <label htmlFor="status" className={inputStyles.label}>
+                Status
+              </label>
               <select
+                id="status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as Booking['status'] })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className={inputStyles.select}
               >
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
@@ -70,20 +64,33 @@ export function BookingModal({ isOpen, onClose, booking, onSubmit }: BookingModa
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Notes</label>
+              <label htmlFor="notes" className={inputStyles.label}>
+                Notes
+              </label>
               <textarea
+                id="notes"
                 value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className={inputStyles.textarea}
                 placeholder="Add any notes about this booking..."
               />
             </div>
 
-            <div className="mt-5 sm:mt-6">
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-3 border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-700 
+                hover:bg-gray-50 transition-colors duration-200"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                className="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white 
+                bg-blue-600 hover:bg-blue-700 transition-colors duration-200
+                focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
               >
                 Update Booking
               </button>

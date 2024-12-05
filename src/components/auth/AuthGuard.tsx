@@ -7,12 +7,17 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const location = useLocation();
+  const { isAuthenticated, token } = useAuthStore();
 
-  if (!isAuthenticated) {
-    // Redirect to login but save the attempted url
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isAuthenticated || !token) {
+    return (
+      <Navigate 
+        to="/login" 
+        state={{ from: location.pathname }}
+        replace 
+      />
+    );
   }
 
   return <>{children}</>;

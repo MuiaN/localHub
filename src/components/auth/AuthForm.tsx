@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Icons } from '../../lib/icons';
 import { useAuthStore } from '../../store/auth';
 import { cn } from '../../lib/utils';
+import { inputStyles } from '../../lib/utils';
 
 interface AuthFormProps {
   type: 'login' | 'register';
@@ -11,7 +12,8 @@ interface AuthFormProps {
 export function AuthForm({ type }: AuthFormProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const setUser = useAuthStore((state) => state.setUser);
+  const login = useAuthStore((state) => state.login);
+  const register = useAuthStore((state) => state.register);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,20 +23,28 @@ export function AuthForm({ type }: AuthFormProps) {
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setUser({
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-      });
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
+
+      console.log('Submitting form:', { type, email });
+
+      if (type === 'login') {
+        await login(email, password);
+        console.log('Login successful');
+      } else {
+        const name = formData.get('name') as string;
+        await register(name, email, password);
+        console.log('Registration successful');
+      }
 
       // Get the redirect path from location state or default to dashboard
       const from = (location.state as any)?.from?.pathname || '/dashboard';
+      console.log('Redirecting to:', from);
       navigate(from, { replace: true });
     } catch (err) {
-      setError('Failed to authenticate. Please try again.');
+      console.error('Auth error:', err);
+      setError('Authentication failed. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -51,18 +61,18 @@ export function AuthForm({ type }: AuthFormProps) {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {error && (
-            <div className="mb-4 p-2 text-sm text-red-700 bg-red-100 rounded-md">
-              {error}
+            <div className="mb-4 p-4 rounded-md bg-red-50 border border-red-200">
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             {type === 'register' && (
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="name" className={inputStyles.label}>
                   Full Name
                 </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Icons.User className="h-5 w-5 text-gray-400" />
                   </div>
@@ -71,7 +81,7 @@ export function AuthForm({ type }: AuthFormProps) {
                     name="name"
                     id="name"
                     required
-                    className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className={cn(inputStyles.base, "pl-10")}
                     placeholder="John Doe"
                   />
                 </div>
@@ -79,10 +89,10 @@ export function AuthForm({ type }: AuthFormProps) {
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className={inputStyles.label}>
                 Email address
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Icons.Mail className="h-5 w-5 text-gray-400" />
                 </div>
@@ -91,17 +101,17 @@ export function AuthForm({ type }: AuthFormProps) {
                   name="email"
                   id="email"
                   required
-                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className={cn(inputStyles.base, "pl-10")}
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className={inputStyles.label}>
                 Password
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Icons.Lock className="h-5 w-5 text-gray-400" />
                 </div>
@@ -110,7 +120,7 @@ export function AuthForm({ type }: AuthFormProps) {
                   name="password"
                   id="password"
                   required
-                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className={cn(inputStyles.base, "pl-10")}
                   placeholder="••••••••"
                 />
               </div>
@@ -121,8 +131,8 @@ export function AuthForm({ type }: AuthFormProps) {
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-                  isLoading && "opacity-50 cursor-not-allowed"
+                  "w-full h-12 px-4 py-2 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200",
+                  isLoading && inputStyles.disabled
                 )}
               >
                 {isLoading ? 'Loading...' : type === 'login' ? 'Sign in' : 'Sign up'}

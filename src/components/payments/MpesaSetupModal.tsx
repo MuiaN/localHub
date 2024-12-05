@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
-import { useMpesaStore } from '../../store/mpesa';
+import { Icons } from '../../lib/icons';
+import { cn, inputStyles } from '../../lib/utils';
 
 interface MpesaSetupModalProps {
   isOpen: boolean;
@@ -9,47 +9,49 @@ interface MpesaSetupModalProps {
 }
 
 export function MpesaSetupModal({ isOpen, onClose, isAdmin = false }: MpesaSetupModalProps) {
-  const { config, setConfig } = useMpesaStore();
   const [mpesaNumber, setMpesaNumber] = useState('');
-  const [serviceFeePercentage, setServiceFeePercentage] = useState(config.serviceFeePercentage);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isAdmin) {
-      setConfig({
-        ...config,
-        adminMpesaNumber: mpesaNumber,
-        serviceFeePercentage,
-      });
+    setIsProcessing(true);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      onClose();
+    } catch (error) {
+      console.error('Failed to save M-Pesa setup:', error);
+    } finally {
+      setIsProcessing(false);
     }
-    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-md w-full">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isAdmin ? 'Admin M-Pesa Setup' : 'Business M-Pesa Setup'}
+          </h2>
+          <button
+            onClick={onClose}
+            disabled={isProcessing}
+            className={cn(
+              "text-gray-400 hover:text-gray-500",
+              isProcessing && inputStyles.disabled
+            )}
+          >
+            <Icons.X className="h-6 w-6" />
+          </button>
         </div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <div className="absolute top-0 right-0 pt-4 pr-4">
-            <button
-              onClick={onClose}
-              className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium text-gray-900">
-                {isAdmin ? 'Admin M-Pesa Setup' : 'Business M-Pesa Setup'}
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="text-sm text-gray-500">
                 {isAdmin
                   ? 'Configure the M-Pesa number for receiving service fees'
                   : 'Set up your M-Pesa number for receiving payments'}
@@ -57,7 +59,7 @@ export function MpesaSetupModal({ isOpen, onClose, isAdmin = false }: MpesaSetup
             </div>
 
             <div>
-              <label htmlFor="mpesaNumber" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="mpesaNumber" className={inputStyles.label}>
                 M-Pesa Number
               </label>
               <input
@@ -66,44 +68,43 @@ export function MpesaSetupModal({ isOpen, onClose, isAdmin = false }: MpesaSetup
                 value={mpesaNumber}
                 onChange={(e) => setMpesaNumber(e.target.value)}
                 placeholder="e.g., 254712345678"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className={cn(inputStyles.base, isProcessing && inputStyles.disabled)}
                 required
+                disabled={isProcessing}
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-gray-500">
                 Enter the number in international format (254...)
               </p>
             </div>
 
-            {isAdmin && (
-              <div>
-                <label htmlFor="serviceFee" className="block text-sm font-medium text-gray-700">
-                  Service Fee Percentage
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <input
-                    type="number"
-                    id="serviceFee"
-                    value={serviceFeePercentage}
-                    onChange={(e) => setServiceFeePercentage(Number(e.target.value))}
-                    className="block w-full pr-8 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    required
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">%</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-5 sm:mt-6">
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isProcessing}
+                className={cn(
+                  "px-6 py-3 border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200",
+                  isProcessing && inputStyles.disabled
+                )}
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                disabled={isProcessing}
+                className={cn(
+                  "px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2",
+                  isProcessing && inputStyles.disabled
+                )}
               >
-                Save M-Pesa Settings
+                {isProcessing ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                    Processing...
+                  </div>
+                ) : (
+                  'Save'
+                )}
               </button>
             </div>
           </form>

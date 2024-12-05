@@ -1,219 +1,265 @@
-import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Icons } from '../../lib/icons';
 import type { Customer } from '../../types';
+import { cn, inputStyles } from '../../lib/utils';
 
 interface CustomerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (customer: Customer) => void;
+  onSubmit: (customer: Omit<Customer, 'id' | 'joinedDate' | 'lastVisit' | 'totalSpent' | 'bookingCount'>) => void;
   customer?: Customer | null;
 }
 
-const defaultCustomer: Omit<Customer, 'id' | 'joinedDate' | 'lastVisit'> = {
-  name: '',
-  email: '',
-  phone: '',
-  address: '',
-  totalSpent: 0,
-  bookingCount: 0,
-  notes: '',
-  tags: [],
-  status: 'active',
+type CustomerFormData = {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  notes: string;
+  tags: string[];
+  status: 'active' | 'inactive';
 };
 
 export function CustomerModal({ isOpen, onClose, onSubmit, customer }: CustomerModalProps) {
-  const [formData, setFormData] = useState<Partial<Customer>>(defaultCustomer);
-  const [tagInput, setTagInput] = useState('');
+  const [formData, setFormData] = useState<CustomerFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    notes: '',
+    tags: [],
+    status: 'active',
+  });
+
+  const [newTag, setNewTag] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (customer) {
-      setFormData(customer);
+      setFormData({
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address,
+        notes: customer.notes || '',
+        tags: customer.tags,
+        status: customer.status,
+      });
     } else {
-      setFormData(defaultCustomer);
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        notes: '',
+        tags: [],
+        status: 'active',
+      });
     }
   }, [customer]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newCustomer: Customer = {
-      ...formData,
-      id: customer?.id || '',
-      joinedDate: customer?.joinedDate || new Date(),
-      lastVisit: customer?.lastVisit || new Date(),
-    } as Customer;
-    onSubmit(newCustomer);
+    if (!formData.name || !formData.email || !formData.phone) {
+      setError('Please fill in all required fields');
+      return;
+    }
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    onSubmit(formData);
+    onClose();
   };
 
-  const handleAddTag = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      setFormData({
-        ...formData,
-        tags: [...(formData.tags || []), tagInput.trim()],
-      });
-      setTagInput('');
-    }
+  const handleAddTag = () => {
+    if (!newTag) return;
+    setFormData(prev => ({
+      ...prev,
+      tags: [...prev.tags, newTag.trim()]
+    }));
+    setNewTag('');
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setFormData({
-      ...formData,
-      tags: (formData.tags || []).filter((tag) => tag !== tagToRemove),
-    });
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {customer ? 'Edit Customer' : 'Add New Customer'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <Icons.X className="h-6 w-6" />
+          </button>
         </div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <div className="absolute top-0 right-0 pt-4 pr-4">
-            <button
-              onClick={onClose}
-              className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">
-                {customer ? 'Edit Customer' : 'Add Customer'}
-              </h3>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className={inputStyles.error}>
+              <Icons.AlertTriangle className="h-4 w-4 mr-2" />
+              {error}
             </div>
+          )}
 
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Name
+              <label htmlFor="name" className={inputStyles.label}>
+                Full Name *
               </label>
               <input
                 type="text"
                 id="name"
-                value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                value={formData.name}
+                onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className={inputStyles.base}
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
+              <label htmlFor="email" className={inputStyles.label}>
+                Email Address *
               </label>
               <input
                 type="email"
                 id="email"
-                value={formData.email || ''}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                value={formData.email}
+                onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                className={inputStyles.base}
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone
+              <label htmlFor="phone" className={inputStyles.label}>
+                Phone Number *
               </label>
               <input
                 type="tel"
                 id="phone"
-                value={formData.phone || ''}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                value={formData.phone}
+                onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                className={inputStyles.base}
                 required
+                placeholder="+254 XXX XXX XXX"
               />
             </div>
 
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                Address
-              </label>
-              <input
-                type="text"
-                id="address"
-                value={formData.address || ''}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="status" className={inputStyles.label}>
                 Status
               </label>
               <select
                 id="status"
-                value={formData.status || 'active'}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as Customer['status'] })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                value={formData.status}
+                onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
+                className={inputStyles.select}
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
-                Tags
-              </label>
-              <div className="mt-1">
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.tags?.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="ml-1 text-blue-600 hover:text-blue-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleAddTag}
-                  placeholder="Type and press Enter to add tags"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                />
-              </div>
-            </div>
+          <div>
+            <label htmlFor="address" className={inputStyles.label}>
+              Address
+            </label>
+            <input
+              type="text"
+              id="address"
+              value={formData.address}
+              onChange={e => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              className={inputStyles.base}
+              placeholder="Street address, City"
+            />
+          </div>
 
-            <div>
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                Notes
-              </label>
-              <textarea
-                id="notes"
-                value={formData.notes || ''}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          <div>
+            <label htmlFor="notes" className={inputStyles.label}>
+              Notes
+            </label>
+            <textarea
+              id="notes"
+              value={formData.notes}
+              onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              rows={3}
+              className={inputStyles.textarea}
+              placeholder="Any additional notes about the customer..."
+            />
+          </div>
+
+          <div>
+            <label className={inputStyles.label}>Tags</label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={e => setNewTag(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                className={inputStyles.base}
+                placeholder="Add tags (e.g., VIP, Regular)"
               />
-            </div>
-
-            <div className="mt-5 sm:mt-6">
               <button
-                type="submit"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                type="button"
+                onClick={handleAddTag}
+                className="h-12 px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg
+                hover:bg-blue-700 transition-colors duration-200
+                focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
               >
-                {customer ? 'Update Customer' : 'Add Customer'}
+                <Icons.Plus className="h-4 w-4 mr-1" />
+                Add
               </button>
             </div>
-          </form>
-        </div>
+            {formData.tags.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {formData.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1.5 inline-flex items-center justify-center text-blue-400 hover:text-blue-500"
+                    >
+                      <Icons.X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+            >
+              {customer ? 'Save Changes' : 'Add Customer'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

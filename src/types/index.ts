@@ -81,6 +81,7 @@ export interface Booking {
   id: string;
   customerId: string;
   serviceId: string;
+  serviceName: string;
   businessId: string;
   date: string;
   startTime: string;

@@ -1,79 +1,41 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Header } from './components/layout/Header';
-import { Footer } from './components/layout/Footer';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
+import { LandingPage } from './pages/LandingPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import ServicesPage from './pages/dashboard/ServicesPage';
+import CustomersPage from './pages/dashboard/CustomersPage';
+import BusinessProfilePage from './pages/dashboard/BusinessProfilePage';
+import SettingsPage from './pages/dashboard/SettingsPage';
+import BookingsPage from './pages/dashboard/BookingsPage';
 import { AuthGuard } from './components/auth/AuthGuard';
+import DashboardLayout from './components/dashboard/DashboardLayout';
 
-// Lazy load pages
-const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
-const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
-const DashboardLayout = React.lazy(() => import('./components/dashboard/DashboardLayout'));
-const DashboardPage = React.lazy(() => import('./pages/dashboard/DashboardPage'));
-const ServicesPage = React.lazy(() => import('./pages/dashboard/ServicesPage'));
-const BookingsPage = React.lazy(() => import('./pages/dashboard/BookingsPage'));
-const CustomersPage = React.lazy(() => import('./pages/dashboard/CustomersPage'));
-const BusinessProfilePage = React.lazy(() => import('./pages/dashboard/BusinessProfilePage'));
-const SettingsPage = React.lazy(() => import('./pages/dashboard/SettingsPage'));
-
-function LoadingFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center text-gray-600">Loading...</div>
-    </div>
-  );
-}
-
-export default function App() {
+function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            {/* Public routes */}
-            <Route
-              path="/"
-              element={
-                <>
-                  <Header />
-                  <main className="flex-grow">
-                    <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                      <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-                        Welcome to LocalHub
-                      </h1>
-                      <p className="text-xl text-center text-gray-600">
-                        Your neighborhood services, all in one place.
-                      </p>
-                    </div>
-                  </main>
-                  <Footer />
-                </>
-              }
-            />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-            {/* Protected dashboard routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <AuthGuard>
-                  <DashboardLayout />
-                </AuthGuard>
-              }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="services" element={<ServicesPage />} />
-              <Route path="bookings" element={<BookingsPage />} />
-              <Route path="customers" element={<CustomersPage />} />
-              <Route path="business" element={<BusinessProfilePage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
+        {/* Protected Dashboard Routes */}
+        <Route path="/dashboard" element={<AuthGuard><DashboardLayout /></AuthGuard>}>
+          <Route index element={<DashboardPage />} />
+          <Route path="services" element={<ServicesPage />} />
+          <Route path="bookings" element={<BookingsPage />} />
+          <Route path="customers" element={<CustomersPage />} />
+          <Route path="profile" element={<BusinessProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
 
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </div>
+        {/* Redirect all other routes to landing page */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </Router>
   );
 }
+
+export default App;

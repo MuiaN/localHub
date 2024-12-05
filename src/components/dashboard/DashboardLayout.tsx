@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useLocation, Outlet } from 'react-router-dom';
 import { Icons } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
@@ -8,12 +8,27 @@ const navigation = [
   { name: 'Services', href: '/dashboard/services', icon: Icons.Package },
   { name: 'Bookings', href: '/dashboard/bookings', icon: Icons.Calendar },
   { name: 'Customers', href: '/dashboard/customers', icon: Icons.Users },
-  { name: 'Business Profile', href: '/dashboard/business', icon: Icons.Building2 },
+  { name: 'Business Profile', href: '/dashboard/profile', icon: Icons.Building2 },
   { name: 'Settings', href: '/dashboard/settings', icon: Icons.Settings },
 ];
 
-export default function DashboardLayout() {
+const DashboardLayout: React.FC = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    console.log('DashboardLayout: Current location:', location.pathname);
+    console.log('DashboardLayout: Full location object:', location);
+    console.log('DashboardLayout: Window location:', window.location.href);
+  }, [location]);
+
+  console.log('DashboardLayout: Rendering with path:', location.pathname);
+
+  useEffect(() => {
+    console.log('DashboardLayout: About to render Outlet');
+    return () => {
+      console.log('DashboardLayout: Outlet unmounted');
+    };
+  }, []);
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-100">
@@ -27,12 +42,15 @@ export default function DashboardLayout() {
               <nav className="flex-1 px-2 py-4 bg-blue-700 space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;
+                  const isActive = location.pathname === item.href;
+                  console.log('DashboardLayout: Menu item:', { href: item.href, isActive });
+                  
                   return (
                     <Link
                       key={item.name}
                       to={item.href}
                       className={cn(
-                        location.pathname === item.href
+                        isActive
                           ? 'bg-blue-800 text-white'
                           : 'text-blue-100 hover:bg-blue-600',
                         'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
@@ -59,4 +77,6 @@ export default function DashboardLayout() {
       </div>
     </div>
   );
-}
+};
+
+export default DashboardLayout;

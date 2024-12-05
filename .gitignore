@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
@@ -23,5 +24,26 @@ dist-ssr
 *.sln
 *.sw?
 
-# Bolt files
-.bolt/
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build files
+/dist
+/build
+
+# Debug logs
+debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Server
+server/logs/
+server/.env
+server/dist/
