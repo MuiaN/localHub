@@ -13,6 +13,23 @@ interface ContactInformationSectionProps {
   onMpesaChange: (value: string) => void;
 }
 
+const formatPhoneNumber = (phone: string) => {
+  // Remove any non-digit characters
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // If it starts with 0, replace with 254
+  if (cleaned.startsWith('0')) {
+    return '254' + cleaned.slice(1);
+  }
+  
+  // If it doesn't start with 254, add it
+  if (!cleaned.startsWith('254')) {
+    return '254' + cleaned;
+  }
+  
+  return cleaned;
+};
+
 export function ContactInformationSection({
   contact,
   mpesaNumber,
@@ -20,6 +37,16 @@ export function ContactInformationSection({
   onContactChange,
   onMpesaChange,
 }: ContactInformationSectionProps) {
+  const handlePhoneBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    onContactChange('phone', formatted);
+  };
+
+  const handleMpesaBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    onMpesaChange(formatted);
+  };
+
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
@@ -33,10 +60,15 @@ export function ContactInformationSection({
             id="phone"
             value={contact.phone}
             onChange={e => onContactChange('phone', e.target.value)}
+            onBlur={handlePhoneBlur}
             className={cn(inputStyles.base, isProcessing && inputStyles.disabled)}
             required
             disabled={isProcessing}
+            placeholder="0712345678"
           />
+          <p className="mt-1 text-xs text-gray-500">
+            Enter number starting with 0, it will be formatted automatically
+          </p>
         </div>
 
         <div>
@@ -78,11 +110,15 @@ export function ContactInformationSection({
             id="mpesa"
             value={mpesaNumber}
             onChange={e => onMpesaChange(e.target.value)}
+            onBlur={handleMpesaBlur}
             className={cn(inputStyles.base, isProcessing && inputStyles.disabled)}
             required
-            placeholder="+254"
+            placeholder="0712345678"
             disabled={isProcessing}
           />
+          <p className="mt-1 text-xs text-gray-500">
+            Enter number starting with 0, it will be formatted automatically
+          </p>
         </div>
       </div>
     </div>

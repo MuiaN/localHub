@@ -377,21 +377,36 @@ export default function BusinessProfilePage() {
 }
 
 function StaticMap({ coordinates }: { coordinates: { lat: number; lng: number } }) {
-  const { isLoaded } = useGoogleMapsScript();
+  const { isLoaded, error } = useGoogleMapsScript();
   
+  console.log('StaticMap: Script loaded:', isLoaded, 'Error:', error);
+  console.log('StaticMap: Coordinates:', coordinates);
+
   if (!isLoaded) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-50">
+      <div className="w-full h-[250px] flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-10 w-10 border-3 border-blue-400 border-t-transparent"></div>
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="w-full h-[250px] flex items-center justify-center bg-red-50">
+        <div className="flex items-center text-red-600">
+          <Icons.AlertTriangle className="h-5 w-5 mr-2" />
+          <span>Failed to load map</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-[250px] relative">
       <MapContainer
         center={coordinates}
         onMapLoad={(map) => {
+          console.log('StaticMap: Map loaded, adding marker');
           // Create and add the marker
           const marker = new window.google.maps.Marker({
             position: coordinates,
@@ -401,6 +416,7 @@ function StaticMap({ coordinates }: { coordinates: { lat: number; lng: number } 
 
           // Ensure proper centering
           google.maps.event.addListenerOnce(map, 'tilesloaded', () => {
+            console.log('StaticMap: Map tiles loaded, centering map');
             map.setCenter(coordinates);
             map.setZoom(16);
           });

@@ -7,7 +7,7 @@ export const defaultBusinessData: Omit<Business, 'id' | 'ownerId' | 'rating' | '
   location: {
     address: '',
     city: '',
-    coordinates: { lat: 0, lng: 0 },
+    coordinates: { lat: -1.2921, lng: 36.8219 },
   },
   contact: {
     phone: '',

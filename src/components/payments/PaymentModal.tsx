@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Icons } from '../../lib/icons';
-import type { Booking } from '../../types';
 import { cn, inputStyles } from '../../lib/utils';
+import type { Booking } from '../../types';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -9,6 +9,23 @@ interface PaymentModalProps {
   booking: Booking;
   onPaymentComplete: () => void;
 }
+
+const formatPhoneNumber = (phone: string) => {
+  // Remove any non-digit characters
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // If it starts with 0, replace with 254
+  if (cleaned.startsWith('0')) {
+    return '254' + cleaned.slice(1);
+  }
+  
+  // If it doesn't start with 254, add it
+  if (!cleaned.startsWith('254')) {
+    return '254' + cleaned;
+  }
+  
+  return cleaned;
+};
 
 export function PaymentModal({ isOpen, onClose, booking, onPaymentComplete }: PaymentModalProps) {
   const [mpesaNumber, setMpesaNumber] = useState('');
@@ -28,6 +45,11 @@ export function PaymentModal({ isOpen, onClose, booking, onPaymentComplete }: Pa
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleMpesaBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setMpesaNumber(formatted);
   };
 
   if (!isOpen) return null;
@@ -76,38 +98,25 @@ export function PaymentModal({ isOpen, onClose, booking, onPaymentComplete }: Pa
                 id="mpesaNumber"
                 value={mpesaNumber}
                 onChange={(e) => setMpesaNumber(e.target.value)}
-                placeholder="e.g., 254712345678"
+                onBlur={handleMpesaBlur}
+                placeholder="0712345678"
                 className={cn(inputStyles.base, isProcessing && inputStyles.disabled)}
                 required
                 disabled={isProcessing}
               />
-              <p className="mt-2 text-sm text-gray-500">
-                Enter the number in international format (254...)
+              <p className="mt-1 text-xs text-gray-500">
+                Enter number starting with 0, it will be formatted automatically
               </p>
             </div>
 
-            <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isProcessing}
-                className={cn(
-                  "mt-3 sm:mt-0 px-6 py-3 border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200",
-                  isProcessing && inputStyles.disabled
-                )}
-              >
-                Cancel
-              </button>
+            <div className="mt-6">
               <button
                 type="submit"
                 disabled={isProcessing}
-                className={cn(
-                  "px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2",
-                  isProcessing && inputStyles.disabled
-                )}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 {isProcessing ? (
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center">
                     <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
                     Processing...
                   </div>

@@ -20,9 +20,7 @@ export function useGoogleMapsScript() {
 
     const existingScript = document.getElementById(SCRIPT_ID);
     if (existingScript) {
-      const handleExistingScriptLoad = () => setIsLoaded(true);
-      existingScript.addEventListener('load', handleExistingScriptLoad);
-      return () => existingScript.removeEventListener('load', handleExistingScriptLoad);
+      existingScript.remove();
     }
 
     const script = document.createElement('script');
@@ -31,9 +29,15 @@ export function useGoogleMapsScript() {
     script.async = true;
     script.defer = true;
 
-    const handleLoad = () => setIsLoaded(true);
-    const handleError = (error: Error | ErrorEvent) => {
-      setError(error instanceof Error ? error : new Error('Failed to load Google Maps script'));
+    const handleLoad = () => {
+      console.log('Google Maps script loaded successfully');
+      setIsLoaded(true);
+    };
+
+    const handleError = () => {
+      const error = new Error('Failed to load Google Maps script');
+      console.error(error);
+      setError(error);
       script.remove();
     };
 

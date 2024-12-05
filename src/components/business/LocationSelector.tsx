@@ -1,6 +1,6 @@
 /// <reference types="@types/google.maps" />
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Icons } from '../../lib/icons';
 import { useGoogleMapsScript } from '../../hooks/useGoogleMapsScript';
 import { MapContainer } from './MapContainer';
@@ -31,26 +31,40 @@ export function LocationSelector({ address, city, coordinates, onChange }: Locat
 
   const { isLoaded: isScriptLoaded, error: scriptError } = useGoogleMapsScript();
 
+  // Initialize autocomplete when script is loaded
+  useEffect(() => {
+    if (isScriptLoaded && searchInputRef.current && !autocompleteRef.current) {
+      try {
+        const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
+          fields: ['address_components', 'formatted_address', 'geometry', 'name'],
+          types: ['geocode', 'establishment']
+        });
+        autocompleteRef.current = autocomplete;
+      } catch (error) {
+        console.error('Error initializing autocomplete:', error);
+        setError('Failed to initialize location search');
+      }
+    }
+  }, [isScriptLoaded]);
+
   const handleMapLoad = useCallback((map: google.maps.Map) => {
     try {
+      // Create marker
       const marker = new window.google.maps.Marker({
         map,
         position: coordinates.lat && coordinates.lng ? coordinates : DEFAULT_CENTER,
         draggable: true,
         title: 'Business Location'
       });
+      markerRef.current = marker;
 
-      if (searchInputRef.current) {
-        const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
-          fields: ['address_components', 'formatted_address', 'geometry', 'name'],
-          types: ['geocode', 'establishment']
-        });
+      // Bind autocomplete to map
+      if (autocompleteRef.current) {
+        autocompleteRef.current.bindTo('bounds', map);
 
-        autocomplete.bindTo('bounds', map);
-
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          if (!place.geometry?.location) return;
+        autocompleteRef.current.addListener('place_changed', () => {
+          const place = autocompleteRef.current?.getPlace();
+          if (!place?.geometry?.location) return;
 
           if (place.geometry.viewport) {
             map.fitBounds(place.geometry.viewport);
@@ -62,10 +76,9 @@ export function LocationSelector({ address, city, coordinates, onChange }: Locat
           marker.setPosition(place.geometry.location);
           updateLocation(place);
         });
-
-        autocompleteRef.current = autocomplete;
       }
 
+      // Add marker drag event
       marker.addListener('dragend', () => {
         const position = marker.getPosition();
         if (!position) return;
@@ -84,6 +97,7 @@ export function LocationSelector({ address, city, coordinates, onChange }: Locat
         );
       });
 
+      // Add map click event
       map.addListener('click', (e: google.maps.MapMouseEvent) => {
         const clickedLocation = e.latLng;
         if (!clickedLocation) return;
@@ -104,7 +118,6 @@ export function LocationSelector({ address, city, coordinates, onChange }: Locat
         );
       });
 
-      markerRef.current = marker;
       setIsLoading(false);
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -149,7 +162,11 @@ export function LocationSelector({ address, city, coordinates, onChange }: Locat
   if (scriptError) {
     return (
       <div className="p-4 bg-red-50 rounded-lg border-2 border-red-200">
-        <p className="text-red-600 font-medium">Failed to load Google Maps</p>
+        <div className="flex items-center text-red-600">
+          <Icons.AlertTriangle className="h-5 w-5 mr-2" />
+          <p className="font-medium">Failed to load Google Maps</p>
+        </div>
+        <p className="mt-2 text-sm text-red-500">{scriptError.message}</p>
       </div>
     );
   }
@@ -171,16 +188,18 @@ export function LocationSelector({ address, city, coordinates, onChange }: Locat
         <Icons.Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
       </div>
 
-      {isScriptLoaded ? (
-        <MapContainer
-          center={coordinates.lat && coordinates.lng ? coordinates : DEFAULT_CENTER}
-          onMapLoad={handleMapLoad}
-        />
-      ) : (
-        <div className="w-full h-[400px] rounded-lg border-2 border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-3 border-blue-400 border-t-transparent"></div>
-        </div>
-      )}
+      <div className="w-full h-[400px] rounded-lg border-2 border-gray-200 overflow-hidden">
+        {!isScriptLoaded ? (
+          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+            <div className="animate-spin rounded-full h-10 w-10 border-3 border-blue-400 border-t-transparent"></div>
+          </div>
+        ) : (
+          <MapContainer
+            center={coordinates.lat && coordinates.lng ? coordinates : DEFAULT_CENTER}
+            onMapLoad={handleMapLoad}
+          />
+        )}
+      </div>
 
       <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
         <p className="font-medium mb-2">Location Selection Options:</p>
@@ -193,7 +212,10 @@ export function LocationSelector({ address, city, coordinates, onChange }: Locat
 
       {error && (
         <div className="p-4 bg-red-50 rounded-lg border-2 border-red-200">
-          <p className="text-red-600 font-medium">{error}</p>
+          <div className="flex items-center text-red-600">
+            <Icons.AlertTriangle className="h-5 w-5 mr-2" />
+            <p className="font-medium">{error}</p>
+          </div>
         </div>
       )}
     </div>
