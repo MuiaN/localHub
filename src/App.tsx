@@ -1,41 +1,92 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AdminDashboardLayout } from './components/admin/AdminDashboardLayout';
+import { DashboardLayout } from './components/dashboard/DashboardLayout';
+import { ClientDashboardLayout } from './components/client/ClientDashboardLayout';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { AdminTransactionsPage } from './pages/admin/AdminTransactionsPage';
+import { AdminBusinessesPage } from './pages/admin/AdminBusinessesPage';
+import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
+import { ClientDashboardPage } from './pages/client/ClientDashboardPage';
+import { BrowsePage } from './pages/client/BrowsePage';
+import { ClientBookingsPage } from './pages/client/ClientBookingsPage';
+import { ClientOrdersPage } from './pages/client/ClientOrdersPage';
+import { PaymentsPage } from './pages/client/PaymentsPage';
+import { FavoritesPage } from './pages/client/FavoritesPage';
+import { AddressesPage } from './pages/client/AddressesPage';
+import { ProfilePage } from './pages/client/ProfilePage';
+import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
-import { LandingPage } from './pages/LandingPage';
-import DashboardPage from './pages/dashboard/DashboardPage';
-import ServicesPage from './pages/dashboard/ServicesPage';
-import CustomersPage from './pages/dashboard/CustomersPage';
-import BusinessProfilePage from './pages/dashboard/BusinessProfilePage';
-import SettingsPage from './pages/dashboard/SettingsPage';
-import BookingsPage from './pages/dashboard/BookingsPage';
-import { AuthGuard } from './components/auth/AuthGuard';
-import DashboardLayout from './components/dashboard/DashboardLayout';
+import { UserTypeSelectionPage } from './pages/auth/UserTypeSelectionPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { useAuthStore } from './store/auth';
 
-function App() {
+export default function App() {
+  const { isAuthenticated, user } = useAuthStore();
+
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
+        {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register/select-type" element={<UserTypeSelectionPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
-        {/* Protected Dashboard Routes */}
-        <Route path="/dashboard" element={<AuthGuard><DashboardLayout /></AuthGuard>}>
-          <Route index element={<DashboardPage />} />
-          <Route path="services" element={<ServicesPage />} />
-          <Route path="bookings" element={<BookingsPage />} />
-          <Route path="customers" element={<CustomersPage />} />
-          <Route path="profile" element={<BusinessProfilePage />} />
-          <Route path="settings" element={<SettingsPage />} />
+        
+        {/* Admin routes */}
+        <Route
+          path="/admin/*"
+          element={
+            isAuthenticated && user?.role === 'admin' ? (
+              <AdminDashboardLayout />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        >
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="transactions" element={<AdminTransactionsPage />} />
+          <Route path="businesses" element={<AdminBusinessesPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
-        {/* Redirect all other routes to landing page */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Protected client/buyer routes */}
+        <Route 
+          path="/client/*" 
+          element={
+            isAuthenticated && user?.role === 'customer' ? (
+              <ClientDashboardLayout />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        >
+          <Route index element={<ClientDashboardPage />} />
+          <Route path="browse" element={<BrowsePage />} />
+          <Route path="bookings" element={<ClientBookingsPage />} />
+          <Route path="orders" element={<ClientOrdersPage />} />
+          <Route path="payments" element={<PaymentsPage />} />
+          <Route path="favorites" element={<FavoritesPage />} />
+          <Route path="addresses" element={<AddressesPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+
+        {/* Protected seller/provider routes */}
+        <Route
+          path="/dashboard/*"
+          element={
+            isAuthenticated && user?.role === 'provider' ? (
+              <DashboardLayout />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* 404 Page */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );
 }
-
-export default App;

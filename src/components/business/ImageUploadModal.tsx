@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import { Icons } from '../../lib/icons';
-import { cn, inputStyles } from '../../lib/utils';
+import { X, Upload, Trash2 } from 'lucide-react';
+import type { Business } from '../../types';
 
 interface ImageUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  images: {
-    logo?: string;
-    banner?: string;
-    gallery: string[];
-  };
-  onSave: (images: { logo?: string; banner?: string; gallery: string[] }) => void;
+  images: Business['images'];
+  onSave: (images: Business['images']) => void;
 }
 
 export function ImageUploadModal({
@@ -19,230 +15,153 @@ export function ImageUploadModal({
   images: initialImages,
   onSave,
 }: ImageUploadModalProps) {
-  const [images, setImages] = useState(initialImages);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [images, setImages] = useState<Business['images']>(initialImages);
 
-  const handleImageChange = (type: 'logo' | 'banner' | 'gallery', value: string) => {
-    if (type === 'gallery') {
-      setImages(prev => ({
-        ...prev,
-        gallery: [...prev.gallery, value],
-      }));
-    } else {
-      setImages(prev => ({
-        ...prev,
-        [type]: value,
-      }));
-    }
-  };
-
-  const handleRemoveImage = (type: 'logo' | 'banner' | 'gallery', index?: number) => {
-    if (type === 'gallery' && typeof index === 'number') {
-      setImages(prev => ({
-        ...prev,
-        gallery: prev.gallery.filter((_, i) => i !== index),
-      }));
-    } else {
-      setImages(prev => ({
-        ...prev,
-        [type]: undefined,
-      }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsProcessing(true);
-    try {
-      await onSave(images);
-      onClose();
-    } catch (error) {
-      console.error('Failed to save images:', error);
-    } finally {
-      setIsProcessing(false);
+    onSave(images);
+    onClose();
+  };
+
+  const handleImageChange = (type: keyof Business['images'], value: string) => {
+    if (type === 'gallery') {
+      setImages({
+        ...images,
+        gallery: [...images.gallery, value],
+      });
+    } else {
+      setImages({
+        ...images,
+        [type]: value,
+      });
     }
+  };
+
+  const handleRemoveGalleryImage = (index: number) => {
+    setImages({
+      ...images,
+      gallery: images.gallery.filter((_, i) => i !== index),
+    });
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Upload Business Images
-          </h2>
-          <button
-            onClick={onClose}
-            disabled={isProcessing}
-            className={cn(
-              "text-gray-400 hover:text-gray-500",
-              isProcessing && inputStyles.disabled
-            )}
-          >
-            <Icons.X className="h-6 w-6" />
-          </button>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* Logo Upload */}
+        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+          <div className="absolute top-0 right-0 pt-4 pr-4">
+            <button
+              onClick={onClose}
+              className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className={inputStyles.label}>Logo</label>
-              <div className="mt-1">
-                {images.logo ? (
-                  <div className="relative">
+              <h3 className="text-lg font-medium text-gray-900">Business Images</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Upload your business logo, banner, and gallery images.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Logo</label>
+                <div className="mt-1 flex items-center space-x-4">
+                  {images.logo && (
                     <img
                       src={images.logo}
                       alt="Business logo"
-                      className="h-32 w-full object-cover rounded-lg"
+                      className="h-12 w-12 rounded-full object-cover"
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage('logo')}
-                      className="absolute top-2 right-2 p-1 bg-red-100 rounded-full text-red-600 hover:bg-red-200"
-                    >
-                      <Icons.X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="url"
-                      placeholder="Enter logo URL"
-                      className={cn(inputStyles.base, isProcessing && inputStyles.disabled)}
-                      disabled={isProcessing}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const input = e.target as HTMLInputElement;
-                          if (input.value) {
-                            handleImageChange('logo', input.value);
-                            input.value = '';
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                )}
+                  )}
+                  <input
+                    type="url"
+                    value={images.logo || ''}
+                    onChange={(e) => handleImageChange('logo', e.target.value)}
+                    placeholder="Enter logo URL"
+                    className="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Banner Upload */}
-            <div>
-              <label className={inputStyles.label}>Banner</label>
-              <div className="mt-1">
-                {images.banner ? (
-                  <div className="relative">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Banner</label>
+                <div className="mt-1 flex items-center space-x-4">
+                  {images.banner && (
                     <img
                       src={images.banner}
                       alt="Business banner"
-                      className="h-32 w-full object-cover rounded-lg"
+                      className="h-12 w-24 object-cover rounded"
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage('banner')}
-                      className="absolute top-2 right-2 p-1 bg-red-100 rounded-full text-red-600 hover:bg-red-200"
-                    >
-                      <Icons.X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="url"
-                      placeholder="Enter banner URL"
-                      className={cn(inputStyles.base, isProcessing && inputStyles.disabled)}
-                      disabled={isProcessing}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const input = e.target as HTMLInputElement;
-                          if (input.value) {
-                            handleImageChange('banner', input.value);
-                            input.value = '';
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Gallery Upload */}
-          <div>
-            <label className={inputStyles.label}>Gallery Images</label>
-            <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {images.gallery.map((url, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={url}
-                    alt={`Gallery image ${index + 1}`}
-                    className="h-32 w-full object-cover rounded-lg"
+                  )}
+                  <input
+                    type="url"
+                    value={images.banner || ''}
+                    onChange={(e) => handleImageChange('banner', e.target.value)}
+                    placeholder="Enter banner URL"
+                    className="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage('gallery', index)}
-                    className="absolute top-2 right-2 p-1 bg-red-100 rounded-full text-red-600 hover:bg-red-200"
-                  >
-                    <Icons.X className="h-4 w-4" />
-                  </button>
                 </div>
-              ))}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="url"
-                  placeholder="Enter gallery image URL"
-                  className={cn(inputStyles.base, isProcessing && inputStyles.disabled)}
-                  disabled={isProcessing}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const input = e.target as HTMLInputElement;
-                      if (input.value) {
-                        handleImageChange('gallery', input.value);
-                        input.value = '';
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Gallery</label>
+                <div className="mt-2 grid grid-cols-2 gap-4">
+                  {images.gallery.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={image}
+                        alt={`Gallery image ${index + 1}`}
+                        className="h-24 w-full object-cover rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGalleryImage(index)}
+                        className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-sm hover:bg-gray-100"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2">
+                  <input
+                    type="url"
+                    placeholder="Enter gallery image URL"
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const input = e.target as HTMLInputElement;
+                        if (input.value) {
+                          handleImageChange('gallery', input.value);
+                          input.value = '';
+                        }
                       }
-                    }
-                  }}
-                />
+                    }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isProcessing}
-              className={cn(
-                "px-6 py-3 border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200",
-                isProcessing && inputStyles.disabled
-              )}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isProcessing}
-              className={cn(
-                "px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2",
-                isProcessing && inputStyles.disabled
-              )}
-            >
-              {isProcessing ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
-                  Processing...
-                </div>
-              ) : (
-                'Save Images'
-              )}
-            </button>
-          </div>
-        </form>
+            <div className="mt-5 sm:mt-6">
+              <button
+                type="submit"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+              >
+                Save Images
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

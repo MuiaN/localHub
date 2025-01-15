@@ -1,15 +1,15 @@
 import React from 'react';
-import { Icons } from '../../lib/icons';
+import { BarChart, Users, Package, Calendar } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const stats = [
-  { name: 'Total Customers', value: '120', icon: Icons.Users, change: '+12%', changeType: 'increase' },
-  { name: 'Active Services', value: '15', icon: Icons.Package, change: '+3%', changeType: 'increase' },
-  { name: 'Monthly Bookings', value: '250', icon: Icons.Calendar, change: '+8%', changeType: 'increase' },
-  { name: 'Revenue', value: '$12,500', icon: Icons.BarChart, change: '+15%', changeType: 'increase' },
+  { name: 'Total Customers', value: '120', icon: Users, change: '+12%', changeType: 'increase' },
+  { name: 'Active Services', value: '15', icon: Package, change: '+3%', changeType: 'increase' },
+  { name: 'Monthly Bookings', value: '250', icon: Calendar, change: '+8%', changeType: 'increase' },
+  { name: 'Revenue', value: '$12,500', icon: BarChart, change: '+15%', changeType: 'increase' },
 ];
 
-export default function DashboardPage() {
+export function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>

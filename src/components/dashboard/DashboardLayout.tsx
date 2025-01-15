@@ -1,34 +1,48 @@
-import React, { useEffect } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Icons } from '../../lib/icons';
+import React from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Package,
+  Calendar,
+  Users,
+  Settings,
+  Building2,
+  CreditCard,
+  Boxes,
+  LogOut,
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuthStore } from '../../store/auth';
 
-const navigation = [
-  { name: 'Overview', href: '/dashboard', icon: Icons.LayoutDashboard },
-  { name: 'Services', href: '/dashboard/services', icon: Icons.Package },
-  { name: 'Bookings', href: '/dashboard/bookings', icon: Icons.Calendar },
-  { name: 'Customers', href: '/dashboard/customers', icon: Icons.Users },
-  { name: 'Business Profile', href: '/dashboard/profile', icon: Icons.Building2 },
-  { name: 'Settings', href: '/dashboard/settings', icon: Icons.Settings },
-];
-
-const DashboardLayout: React.FC = () => {
+export function DashboardLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+  const isProductSeller = user?.businessType === 'product';
 
-  useEffect(() => {
-    console.log('DashboardLayout: Current location:', location.pathname);
-    console.log('DashboardLayout: Full location object:', location);
-    console.log('DashboardLayout: Window location:', window.location.href);
-  }, [location]);
+  const navigation = isProductSeller ? [
+    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Products', href: '/dashboard/products', icon: Package },
+    { name: 'Inventory', href: '/dashboard/inventory', icon: Boxes },
+    { name: 'Orders', href: '/dashboard/orders', icon: Calendar },
+    { name: 'Customers', href: '/dashboard/customers', icon: Users },
+    { name: 'Transactions', href: '/dashboard/transactions', icon: CreditCard },
+    { name: 'Business Profile', href: '/dashboard/business', icon: Building2 },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  ] : [
+    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Services', href: '/dashboard/services', icon: Package },
+    { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar },
+    { name: 'Customers', href: '/dashboard/customers', icon: Users },
+    { name: 'Transactions', href: '/dashboard/transactions', icon: CreditCard },
+    { name: 'Business Profile', href: '/dashboard/business', icon: Building2 },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  ];
 
-  console.log('DashboardLayout: Rendering with path:', location.pathname);
-
-  useEffect(() => {
-    console.log('DashboardLayout: About to render Outlet');
-    return () => {
-      console.log('DashboardLayout: Outlet unmounted');
-    };
-  }, []);
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-100">
@@ -42,15 +56,12 @@ const DashboardLayout: React.FC = () => {
               <nav className="flex-1 px-2 py-4 bg-blue-700 space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location.pathname === item.href;
-                  console.log('DashboardLayout: Menu item:', { href: item.href, isActive });
-                  
                   return (
                     <Link
                       key={item.name}
                       to={item.href}
                       className={cn(
-                        isActive
+                        location.pathname === item.href
                           ? 'bg-blue-800 text-white'
                           : 'text-blue-100 hover:bg-blue-600',
                         'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
@@ -62,6 +73,15 @@ const DashboardLayout: React.FC = () => {
                   );
                 })}
               </nav>
+              <div className="border-t border-blue-800 p-4">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center px-2 py-2 text-sm font-medium rounded-md text-blue-100 hover:bg-blue-600 w-full"
+                >
+                  <LogOut className="mr-3 flex-shrink-0 h-6 w-6" />
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -77,6 +97,4 @@ const DashboardLayout: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default DashboardLayout;
+}
